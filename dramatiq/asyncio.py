@@ -18,6 +18,7 @@
 import asyncio
 import concurrent.futures
 import functools
+import gc
 import logging
 import threading
 from typing import Awaitable, Callable, Optional, TypeVar
@@ -144,7 +145,9 @@ class EventLoopThread(threading.Thread):
                 try:
                     # Use a timeout to be able to catch asynchronously
                     # raised dramatiq exceptions (Interrupt).
-                    return future.result(timeout=self.interrupt_check_ival)
+                    res = future.result(timeout=self.interrupt_check_ival)
+                    gc.collect()
+                    return res
                 except concurrent.futures.TimeoutError:
                     continue
         except Interrupt as e:
